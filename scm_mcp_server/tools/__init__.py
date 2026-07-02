@@ -10,10 +10,15 @@ from typing import Any
 
 from mcp import types
 
+from scm_mcp_server.tools import readonly
+
 
 def list_tool_descriptors() -> list[types.Tool]:
-    return []
+    return readonly.list_tool_descriptors()
 
 
 def call(name: str, args: dict[str, Any]) -> dict[str, Any]:
+    result = readonly.call(name, args)
+    if result is not None:
+        return result
     return {"error": f"Tool not implemented: {name}"}
