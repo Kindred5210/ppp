@@ -42,6 +42,70 @@ _PARAM_SCHEMAS: dict[str, dict[str, Any]] = {
 }
 _REQUIRED_PARAMS = {"id", "version", "position"}
 
+_OBJECT_LIST_PARAMS = ("name", "folder", "snippet", "device", "offset", "limit")
+_ID_PARAMS = ("id",)
+
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1addresses/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1address-groups/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1services/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1service-groups/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1tags/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1application-groups/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1external-dynamic-lists/get
+_LIST_TOOLS.update(
+    {
+        "list_addresses": ("/addresses", _OBJECT_LIST_PARAMS),
+        "list_address_groups": ("/address-groups", _OBJECT_LIST_PARAMS),
+        "list_services": ("/services", _OBJECT_LIST_PARAMS),
+        "list_service_groups": ("/service-groups", _OBJECT_LIST_PARAMS),
+        "list_tags": ("/tags", _OBJECT_LIST_PARAMS),
+        "list_application_groups": ("/application-groups", _OBJECT_LIST_PARAMS),
+        "list_external_dynamic_lists": (
+            "/external-dynamic-lists",
+            _OBJECT_LIST_PARAMS,
+        ),
+    }
+)
+
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1addresses~1{id}/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1address-groups~1{id}/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1services~1{id}/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1service-groups~1{id}/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1tags~1{id}/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1application-groups~1{id}/get
+# ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1external-dynamic-lists~1{id}/get
+_GET_BY_ID_TOOLS.update(
+    {
+        "get_address": ("/addresses/{id}", _ID_PARAMS),
+        "get_address_group": ("/address-groups/{id}", _ID_PARAMS),
+        "get_service": ("/services/{id}", _ID_PARAMS),
+        "get_service_group": ("/service-groups/{id}", _ID_PARAMS),
+        "get_tag": ("/tags/{id}", _ID_PARAMS),
+        "get_application_group": ("/application-groups/{id}", _ID_PARAMS),
+        "get_external_dynamic_list": ("/external-dynamic-lists/{id}", _ID_PARAMS),
+    }
+)
+
+# ref: openapi-specs/scm/config/sase/operations/config-operations-march.yaml#/paths/~1jobs/get
+# ref: openapi-specs/scm/config/sase/operations/config-operations-march.yaml#/paths/~1config-versions/get
+_LIST_TOOLS.update(
+    {
+        "list_jobs": ("/jobs", ()),
+        "list_config_versions": ("/config-versions", ("limit", "offset")),
+    }
+)
+
+# ref: openapi-specs/scm/config/sase/operations/config-operations-march.yaml#/paths/~1jobs~1{id}/get
+# ref: openapi-specs/scm/config/sase/operations/config-operations-march.yaml#/paths/~1config-versions~1{version}/get
+# ref: openapi-specs/scm/config/sase/operations/config-operations-march.yaml#/paths/~1config-versions~1running/get
+_GET_BY_ID_TOOLS.update(
+    {
+        "get_job": ("/jobs/{id}", _ID_PARAMS),
+        "get_config_version": ("/config-versions/{version}", ("version",)),
+        "get_running_config_version": ("/config-versions/running", ()),
+    }
+)
+
 
 def list_tool_descriptors() -> list[types.Tool]:
     return [
@@ -119,4 +183,3 @@ def _path_param_keys(path_template: str) -> tuple[str, ...]:
     for part in parts[1:]:
         keys.append(part.split("}", 1)[0])
     return tuple(keys)
-
