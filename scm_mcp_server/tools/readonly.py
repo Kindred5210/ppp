@@ -278,6 +278,31 @@ _GET_BY_ID_TOOLS.update(
     }
 )
 
+# ref: openapi-specs/scm/iam/ServiceAccounts.yaml#/paths/~1iam~1v1~1service_accounts/get
+# ref: openapi-specs/scm/iam/Roles.yaml#/paths/~1iam~1v1~1roles/get
+# ref: openapi-specs/scm/iam/AccessPolicies.yaml#/paths/~1iam~1v1~1access_policies/get
+_LIST_TOOLS.update(
+    {
+        "list_service_accounts": ("/iam/v1/service_accounts", ()),
+        "list_roles": ("/iam/v1/roles", ()),
+        "list_access_policies": (
+            "/iam/v1/access_policies",
+            ("role", "principal"),
+        ),
+    }
+)
+
+# ref: openapi-specs/scm/iam/ServiceAccounts.yaml#/paths/~1iam~1v1~1service_accounts~1{id}/get
+# ref: openapi-specs/scm/iam/Roles.yaml#/paths/~1iam~1v1~1roles~1{name}/get
+# ref: openapi-specs/scm/iam/AccessPolicies.yaml#/paths/~1iam~1v1~1access_policies~1{id}/get
+_GET_BY_ID_TOOLS.update(
+    {
+        "get_service_account": ("/iam/v1/service_accounts/{id}", _ID_PARAMS),
+        "get_role": ("/iam/v1/roles/{name}", ("name",)),
+        "get_access_policy": ("/iam/v1/access_policies/{id}", _ID_PARAMS),
+    }
+)
+
 
 def list_tool_descriptors() -> list[types.Tool]:
     return [
@@ -297,17 +322,20 @@ def call(name: str, args: dict[str, Any]) -> dict[str, Any] | None:
 
 
 def _tool_descriptor(name: str, route: Route) -> types.Tool:
-    _path, param_keys = route
+    path, param_keys = route
     return types.Tool(
         name=name,
         description=f"Read-only SCM tool: {name}",
-        inputSchema=_input_schema(param_keys),
+        inputSchema=_input_schema(path, param_keys),
     )
 
 
-def _input_schema(param_keys: tuple[str, ...]) -> dict[str, Any]:
+def _input_schema(path_template: str, param_keys: tuple[str, ...]) -> dict[str, Any]:
     properties = {key: _PARAM_SCHEMAS[key] for key in param_keys}
-    required = [key for key in param_keys if key in _REQUIRED_PARAMS]
+    path_param_keys = set(_path_param_keys(path_template))
+    required = [
+        key for key in param_keys if key in _REQUIRED_PARAMS or key in path_param_keys
+    ]
     schema: dict[str, Any] = {
         "type": "object",
         "properties": properties,
