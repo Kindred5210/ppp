@@ -1,27 +1,34 @@
-"""
-MCP server 入口：stdio 传输，list_tools 返回空列表（Phase 3 起逐步填充）。
-"""
-import sys
+"""MCP stdio server entrypoint."""
 
+from __future__ import annotations
+
+import asyncio
+import json
+import sys
+from typing import Any
+
+from mcp import types
 from mcp.server import Server
 from mcp.server.stdio import stdio_server
-from mcp import types
 
-import scm_mcp_server.tools as tools
 from scm_mcp_server.config import load as load_config
+from scm_mcp_server import tools
 
 app = Server("scm-mcp-server")
 
 
 @app.list_tools()
 async def list_tools() -> list[types.Tool]:
+    """Return no business tools until WORKFLOW.md Phase 1 fills descriptors."""
     return tools.list_tool_descriptors()
 
 
 @app.call_tool()
-async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
-    result = tools.call(name, arguments)
-    import json
+async def call_tool(
+    name: str,
+    arguments: dict[str, Any] | None = None,
+) -> list[types.TextContent]:
+    result = tools.call(name, arguments or {})
     return [types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False))]
 
 
@@ -33,7 +40,6 @@ def main() -> None:
         sys.exit(1)
 
     print("[scm-mcp-server] Starting (stdio)...", file=sys.stderr)
-    import asyncio
     asyncio.run(_run())
 
 

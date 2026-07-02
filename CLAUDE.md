@@ -14,7 +14,7 @@
 |------|------------|-----------|
 | 语言 | Python 3.11+ | — |
 | MCP SDK | `mcp`（官方，`pip install mcp`） | 任何第三方 MCP 封装 |
-| HTTP 客户端 | `httpx`（异步） | requests、aiohttp 等 |
+| HTTP 客户端 | `httpx` | requests、aiohttp 等 |
 | 传输层 | stdio | SSE、HTTP、WebSocket |
 | 依赖管理 | `pyproject.toml` | setup.py、requirements.txt 作为主文件 |
 
@@ -27,18 +27,12 @@ scm_mcp_server/
   __init__.py
   server.py          # MCP server 入口；注册所有 tool，启动 stdio loop
   auth.py            # OAuth2 client_credentials token 获取与内存缓存
-  client.py          # httpx AsyncClient 封装；统一 Bearer header、base_url、error mapping
+  rest_client.py     # httpx 封装；统一 Bearer header、base_url、error mapping
+  config.py          # SCM 环境变量读取与校验
+  check.py           # token + GET /config/operations/v1/jobs 连通性自检
   tools/
-    __init__.py
-    objects.py       # 地址/地址组/服务/服务组/标签等对象 CRUD
-    security.py      # 安全策略规则 CRUD + move
-    incidents.py     # 告警搜索与详情查询
-    deployment.py    # 部署状态查询（预留）
+    __init__.py      # tool 描述与分发入口；当前为空，后续 Phase 填充
 openapi-specs -> ../pan.dev/openapi-specs  # 软链，只读；禁止修改其中任何文件
-tests/
-  test_auth.py
-  test_client.py
-  test_tools.py
 pyproject.toml
 .env.example
 CLAUDE.md
@@ -59,6 +53,7 @@ docs/
 | `SCM_CLIENT_SECRET` | OAuth2 Client Secret | 必填 |
 | `SCM_TSG_ID` | Tenant Service Group ID | 必填 |
 | `SCM_BASE_URL` | API 基址 | 选填，默认 `https://api.strata.paloaltonetworks.com` |
+| `SCM_AUTH_URL` | OAuth2 认证基址 | 选填，默认 `https://auth.apps.paloaltonetworks.com` |
 
 ---
 
@@ -80,6 +75,6 @@ docs/
   # ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/components/schemas/Address
   ```
 - `auth.py` 必须实现 token 内存缓存，依据 `expires_in` 在到期前自动刷新（建议提前 60 秒）。
-- HTTP 4xx / 5xx 统一在 `client.py` 捕获，转为 MCP `error` 返回，不允许 unhandled exception 穿透到 MCP layer。
+- HTTP 4xx / 5xx 统一在 `rest_client.py` 捕获，转为 MCP `error` 返回，不允许 unhandled exception 穿透到 MCP layer。
 - 每个 Phase 完成后必须所有测试绿灯才能进入下一 Phase（见 WORKFLOW.md）。
 - 新增 tool 时同步更新 DESIGN.md 的 tool 列表。

@@ -1,9 +1,7 @@
-"""
-连通性自检：获取 token + GET /config/operations/v1/jobs。
-退出码 0 = 成功，1 = 失败。
+"""Connectivity self-check for SCM auth and operations API."""
 
-用法：python -m scm_mcp_server.check
-"""
+from __future__ import annotations
+
 import sys
 
 # ref: openapi-specs/scm/config/sase/operations/config-operations-march.yaml
@@ -20,8 +18,9 @@ def main() -> None:
 
     try:
         from scm_mcp_server.auth import get_token
-        token = get_token()
-        print(f"[check] OK   token obtained (first 8 chars: {token[:8]}...)")
+
+        get_token()
+        print("[check] OK   token obtained")
     except Exception as exc:
         print(f"[check] FAIL token: {exc}", file=sys.stderr)
         sys.exit(1)
@@ -33,9 +32,9 @@ def main() -> None:
             print(f"[check] FAIL jobs: {body.get('error')}", file=sys.stderr)
             sys.exit(1)
         if status >= 400:
-            print(f"[check] FAIL jobs: HTTP {status} — {body}", file=sys.stderr)
+            print(f"[check] FAIL jobs: HTTP {status}: {body}", file=sys.stderr)
             sys.exit(1)
-        print(f"[check] OK   GET {_JOBS_PATH} → HTTP {status}")
+        print(f"[check] OK   GET {_JOBS_PATH} -> HTTP {status}")
     except Exception as exc:
         print(f"[check] FAIL jobs: {exc}", file=sys.stderr)
         sys.exit(1)
