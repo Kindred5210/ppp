@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "scm": {
+      "command": "/Users/Kiddo/Desktop/palo/.venv/bin/python",
+      "args": ["-m", "scm_mcp_server"],
+      "cwd": "/Users/Kiddo/Desktop/palo",
+      "env": {
+        "SCM_CLIENT_ID": "your-client-id@<tsg-id>.iam.panserviceaccount.com",
+        "SCM_CLIENT_SECRET": "your-client-secret",
+        "SCM_TSG_ID": "your-tsg-id"
+      }
+    }
+  }
+}

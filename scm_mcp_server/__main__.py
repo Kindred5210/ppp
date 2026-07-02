@@ -1,0 +1,3 @@
+from scm_mcp_server.server import main
+
+main()
