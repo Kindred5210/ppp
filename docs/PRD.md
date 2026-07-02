@@ -2,7 +2,9 @@
 
 **版本**：v0.1（MVP）
 **状态**：草稿待确认
-**关联文档**：[CLAUDE.md](../CLAUDE.md)（L1 工程契约）· [DESIGN.md](../DESIGN.md)（L2 技术设计）· [WORKFLOW.md](../WORKFLOW.md)（L3 阶段协议）
+**L1 约束来源**：[CLAUDE.md](../CLAUDE.md)
+**技术映射来源**：[DESIGN.md](../DESIGN.md)
+**阶段执行来源**：[WORKFLOW.md](../WORKFLOW.md)
 
 ---
 
@@ -10,166 +12,121 @@
 
 ### 1.1 网络安全工程师
 
-**画像**：负责 Prisma Access / NGFW 策略日常维护，需要快速审查和变更安全规则，习惯 CLI 但需要自然语言辅助。
+**用户画像**：负责 SCM 中安全策略、对象和安全配置的日常维护，需要在 AI 助手内用自然语言完成查询、核查和受控变更。
 
-| 场景 | 用户输入示例 | 期待结果 |
-|------|-------------|---------|
-| 策略审查 | "列出 Shared 文件夹里所有 action 为 allow 且 destination 为 any 的规则" | 返回符合条件的规则列表，字段清晰可读 |
-| 应急封堵 | "在 Shared/pre-rulebase 最顶部创建一条拒绝来自 1.2.3.0/24 的所有流量的规则" | 规则创建成功并确认位于 top |
-| 对象盘点 | "哪些地址对象包含 192.168.1. 这个 IP 段，它们被哪些标签标记" | 地址列表含名称、IP、tag 字段 |
+| 核心场景 | 用户目标 | 产品行为 |
+|---|---|---|
+| 策略审查 | 按 folder、rulebase、名称、标签、动作等条件定位安全策略 | AI 助手调用对应 MCP tool，返回 SCM 原始结果中的关键字段，并说明查询是否成功 |
+| 策略变更 | 创建、更新、删除或调整安全规则顺序 | MCP server 将结构化参数转发给 SCM REST API；写操作成功或失败均返回可观察结果 |
+| 对象维护 | 查询或维护地址、地址组、服务、服务组、标签等核心对象 | 用户可通过自然语言触发对象读取和变更，字段含义以 SCM 返回为准 |
+| 变更核验 | 变更后确认资源是否存在、字段是否符合预期 | 用户可再次查询同一资源，比较返回字段与变更请求 |
 
-### 1.2 平台运维（NetOps）
+### 1.2 平台运维
 
-**画像**：管理多个 folder 下的配置对象，关注对象一致性和命名规范，主要执行读操作和批量查询。
+**用户画像**：维护多 folder、多配置版本和平台运行状态，关注配置一致性、任务状态、版本可见性和运维操作风险。
 
-| 场景 | 用户输入示例 | 期待结果 |
-|------|-------------|---------|
-| 资产盘点 | "把 Branch-APAC 文件夹下所有服务对象列出来" | 完整服务对象列表，支持分页 |
-| 命名审查 | "找出名字不包含 PROD_ 前缀的地址组" | 地址组列表，由 AI 在结果中过滤 |
-| 配置核查 | "有没有叫 web-servers 的地址组，成员都有哪些" | 地址组详情含成员列表 |
+| 核心场景 | 用户目标 | 产品行为 |
+|---|---|---|
+| 配置盘点 | 列出指定范围内的对象、规则、安全配置文件或 IAM 资源 | 返回 SCM 查询结果，分页、过滤和字段约束以对应 OpenAPI YAML 为准 |
+| 任务追踪 | 查看配置任务、版本状态或运行版本信息 | 通过 MCP tool 获取 SCM Operations 结果，返回任务或版本状态 |
+| 配置版本操作 | 在明确请求下执行版本加载、候选配置处理等运维写操作 | 写操作仅在用户明确表达操作意图时触发；结果由 SCM REST API 决定 |
+| 运行故障定位 | 识别认证失败、权限不足、网络错误或 SCM API 错误 | 返回结构化 MCP error，错误文本包含可定位的状态或原因 |
 
 ### 1.3 安全架构师
 
-**画像**：关注威胁态势，需要从告警数据中提炼风险摘要，推动优先级决策；偶尔审查策略结构。
+**用户画像**：负责策略架构、控制面覆盖度和安全能力治理，需要快速理解 SCM 配置状态，但不希望工具替代架构判断。
 
-| 场景 | 用户输入示例 | 期待结果 |
-|------|-------------|---------|
-| 告警态势 | "过去查出哪些 Critical 级别的未处理告警" | 告警列表含标题、严重级别、状态 |
-| 告警下钻 | "给我看 incident ID INC-20240601-0042 的详情和修复建议" | 完整告警详情含 remediations 字段 |
-| 策略风险 | "安全规则里有没有 disabled=true 但 action=allow 的规则" | 规则列表，由 AI 从结果中筛选 |
+| 核心场景 | 用户目标 | 产品行为 |
+|---|---|---|
+| 策略结构评估 | 查看规则、对象和安全配置文件的覆盖情况 | 返回可供 AI 助手汇总的 SCM 配置数据 |
+| 风险线索识别 | 查找过宽规则、未使用对象、缺少安全配置文件关联等线索 | MCP server 只返回 SCM 数据；AI 助手可基于返回结果做解释，但 server 不内置安全判断逻辑 |
+| 变更影响分析 | 在变更前后对比相关对象或规则 | 用户通过多次读取结果进行对比；MVP 不提供独立 diff 引擎 |
+| 治理文档输入 | 将查询结果转化为评审材料或整改清单 | AI 助手负责归纳表达；server 不生成报告模板 |
 
 ### 1.4 IAM 管理员
 
-**画像**：管理 SCM 用户和权限，MVP 阶段不直接操作 IAM 资源，但使用本工具做**只读配置审计**，主要关切是凭据安全与权限最小化。
+**用户画像**：管理 SCM 身份、角色和访问策略，关注 Service Account 最小权限、凭据安全和写权限边界。
 
-| 场景 | 用户输入示例 | 期待结果 |
-|------|-------------|---------|
-| 权限审计辅助 | "列出所有 tag 包含 'admin' 的地址对象" | 返回匹配列表（作为配置合规审计输入） |
-| 凭据健康检查 | 工具启动时 / token 获取失败时 | 明确的错误信息，不泄露 secret 内容 |
+| 核心场景 | 用户目标 | 产品行为 |
+|---|---|---|
+| IAM 资源盘点 | 查看 Service Account、角色和访问策略 | 返回 SCM IAM API 结果，具体资源字段以 OpenAPI YAML 为准 |
+| IAM 变更 | 在授权场景下创建、更新或删除 IAM 相关资源 | 仅在用户明确请求写操作时触发；SCM 权限不足时返回 403 类错误 |
+| 凭据健康检查 | 判断本地凭据是否存在、是否能换取 token、是否具备目标权限 | 缺失环境变量、认证失败和权限不足均返回可验证错误，不暴露 secret 或 access token |
+| 权限边界验证 | 使用低权限 token 验证只读或受限行为 | server 不提权、不切换凭据、不绕过 SCM IAM 控制 |
 
 ---
 
 ## 2. MVP 功能边界
 
+MVP 是一个 **MCP stdio 到 SCM REST API 的协议适配层**。它不重写 SCM 业务逻辑，不维护 SCM 资源状态，不在本地实现策略判断。
+
+具体端点清单、请求参数、响应字段和 tool 到 REST 的技术映射以 `openapi-specs/scm/` 下 YAML 与 [DESIGN.md](../DESIGN.md) 为准。本文件只描述产品能力边界，不列举、不臆造 REST 端点。
+
 ### 2.1 In Scope
 
-| 能力域 | 能力描述 |
-|--------|---------|
-| **策略对象管理** | 对 SASE 配置面下的地址类、服务类、标签类对象具备完整的创建、读取、更新、删除能力 |
-| **地址组读取** | 读取地址组列表及详情（地址组写操作在 v1.1 补齐） |
-| **安全规则全生命周期** | 对 SASE 安全规则具备创建、读取、更新、删除及规则顺序调整能力 |
-| **安全告警查询** | 对 SCM Incident 数据具备按条件搜索与按 ID 获取详情的能力 |
-| **透明认证** | OAuth2 client_credentials 自动完成，token 内存缓存与到期刷新对用户完全透明 |
-| **结构化错误反馈** | 所有 SCM API 错误、网络错误以可读文本通过 MCP error 返回，不崩溃 |
+| 能力域 | MVP 能力描述 |
+|---|---|
+| MCP 接入 | 通过 stdio 暴露 SCM 能力，供 Claude、Cursor 等 MCP 客户端调用 |
+| 透明认证 | 使用环境变量中的 SCM Client ID、Client Secret、TSG ID 获取 OAuth2 token，并在进程内缓存和刷新 |
+| 配置对象管理 | 支持对 MVP 覆盖的 SCM 配置对象进行查询和受控写操作；对象字段与约束来自 OpenAPI YAML |
+| 安全规则管理 | 支持安全规则类资源的查询、创建、更新、删除和顺序调整；具体资源集合以 DESIGN.md 的 MVP 批次为准 |
+| 安全配置审计 | 支持读取 MVP 覆盖的安全配置文件和相关资源，作为策略评审和架构治理输入 |
+| 运维状态与配置版本 | 支持查询 SCM 任务、配置版本和运行版本，并在明确请求下执行 MVP 覆盖的配置版本写操作 |
+| IAM 管理 | 支持 MVP 覆盖的 Service Account、角色和访问策略读取，以及授权范围内的 IAM 写操作 |
+| 错误映射 | 将 SCM 4xx、5xx、网络错误、认证错误转换为 MCP error；不让未处理异常穿透到 MCP layer |
+| Schema 溯源 | 每个 tool 的输入结构必须能追溯到 `openapi-specs/scm/` 中对应 YAML，不允许手写或猜测字段 |
 
-具体端点列表以 `openapi-specs/scm/` 下 YAML 为准，技术映射见 [DESIGN.md](../DESIGN.md)。
+### 2.2 Out of Scope
 
-### 2.2 Out of Scope（MVP 不做）
-
-| 项目 | 说明 |
-|------|------|
-| IAM 资源写操作 | 用户、角色、权限集、Service Account 的 CRUD；IAM 读操作列为 v1.1 候选 |
-| 配置推送 / 部署 | commit、push-config、candidate 管理等部署操作不在本服务范围 |
-| NGFW / CloudNGFW 专属配置面 | MVP 仅覆盖 SASE 配置面；NGFW 扩展列为 v1.2 候选 |
-| 流量日志与策略命中分析 | 非 SCM Config API 范围 |
-| 批量导入导出 | CSV / Terraform 互转等批处理能力 |
-| 多租户动态切换 | 单 TSG_ID 绑定，运行时不支持切换租户 |
-| Dry-run / 变更预览 | 写操作直接生效；预览模式列为 v1.1 待议 |
-| Web UI 或 HTTP API | 传输层固定为 stdio MCP，不提供 REST 或 Web 界面 |
+| 不做事项 | 边界说明 |
+|---|---|
+| REST 端点清单维护 | PRD 不维护端点列表；端点、operationId、参数和响应字段属于 OpenAPI YAML 与 DESIGN.md |
+| SCM 业务逻辑重写 | 不在 server 中实现策略优化、风险评分、对象解析、自动补全或跨资源推理 |
+| 自动化安全决策 | 不自动判断规则是否安全、不自动生成推荐策略、不自动执行整改 |
+| 持久化数据仓库 | 不缓存 SCM 资源数据，不提供历史趋势、审计报表或本地索引 |
+| 多租户运行时切换 | 单个进程绑定一个 TSG ID；切换租户需要更换环境变量并重启 |
+| 非 stdio 传输 | 不提供 HTTP、SSE、WebSocket 或 Web UI |
+| 批量导入导出 | 不提供 CSV、Terraform、Panorama 配置迁移或批处理编排 |
+| 未纳入 DESIGN.md MVP 批次的能力 | 即使 OpenAPI YAML 中存在相关资源，未进入 DESIGN.md MVP 批次的能力不属于本阶段交付 |
+| 凭据托管系统 | MVP 只从环境变量读取凭据，不内置 Vault、云 Secret Manager 或 KMS 集成 |
 
 ---
 
 ## 3. 产品级数据流
 
-```
-用户（自然语言）
-      │
-      ▼
-AI 助手（Claude / Cursor）
-  理解意图 → 选择 MCP tool → 组装参数
-      │
-      │  MCP stdio（JSON-RPC）
-      ▼
-scm-mcp-server
-  ① token 管理（对用户透明）：
-     - 内存中有效 token → 直接使用
-     - 无 token 或临近到期 → 向 SCM auth 端点请求新 token，缓存
-  ② 参数透传：
-     - 将 AI 传入的结构化参数直接映射到 HTTP 请求
-     - 不重写业务逻辑，不修改参数语义
-  ③ 请求转发：
-     - 向 SCM_BASE_URL 发起 HTTPS 请求，携带 Bearer token
-      │
-      │  HTTPS REST
-      ▼
-Strata Cloud Manager REST API
-  执行业务逻辑，返回 JSON
-      │
-      ▼
-scm-mcp-server
-  ④ 响应处理：
-     - 2xx：将 SCM JSON 原样封装为 MCP tool result 返回
-     - 4xx / 5xx / 网络错误：转换为可读 MCP error（含状态码和 SCM 错误描述）
-      │
-      │  MCP stdio
-      ▼
-AI 助手
-  将结果解释为自然语言回复给用户
-```
+1. 用户在 AI 助手中用自然语言提出查询或变更请求。
+2. AI 助手根据 MCP tool 描述选择一个或多个 tool，并组装结构化参数。
+3. MCP 客户端通过 stdio 将 tool 调用发送给 `scm-mcp-server`。
+4. `scm-mcp-server` 在进程内检查 token 状态；无有效 token 时使用环境变量中的凭据向 SCM 认证服务换取 token。
+5. `scm-mcp-server` 将参数透传给 SCM REST API；不改写字段含义，不补造 SCM 业务参数。
+6. SCM REST API 执行业务逻辑、权限校验和数据变更，并返回 JSON 结果或错误。
+7. `scm-mcp-server` 将成功结果封装为 MCP tool result，将失败结果封装为 MCP error。
+8. AI 助手把 MCP 返回内容解释给用户，并在需要时提示用户继续查询或确认下一步操作。
 
-**关键约束**（对用户可见的行为边界）：
+产品级链路为：**用户 → AI 助手 / MCP 客户端 → MCP stdio → scm-mcp-server → SCM REST API → scm-mcp-server → MCP 结果 → 用户**。
 
-- **写操作立即生效**：创建、更新、删除、规则移动调用成功后 SCM 即执行，无暂存或回滚窗口。
-- **单租户绑定**：一个运行实例对应一个 TSG_ID，切换租户须重启并更换环境变量。
-- **错误以文本返回**：任何失败都返回 MCP error，不挂起、不崩溃，AI 助手可将错误内容转述给用户。
-- **凭据不经过 AI 助手**：token 在 server 进程内部管理，从不出现在 MCP 消息中。
+技术性的 tool 与 REST 端点映射不在本节重画；详见 [DESIGN.md](../DESIGN.md)。
 
 ---
 
 ## 4. 验收标准
 
-### AC-AUTH — 认证与启动
-
-| ID | 标准 | 验证方式 |
-|----|------|---------|
-| AC-AUTH-1 | 缺少任意必填环境变量（`SCM_CLIENT_ID` / `SCM_CLIENT_SECRET` / `SCM_TSG_ID`）时，server 启动后打印含缺失变量名的错误信息并退出，退出码非 0 | 本地删除环境变量后运行 `python -m scm_mcp_server`，检查 stderr 和退出码 |
-| AC-AUTH-2 | 首次 tool 调用触发 token 请求，从发起请求到收到有效 token 的耗时不超过 5 秒（网络正常条件下） | 查看 server 日志时间戳或 httpx 请求计时 |
-| AC-AUTH-3 | 同一 token 有效期内的第二次 tool 调用不产生新的 `/auth/v1/oauth2/access_token` HTTP 请求 | `tests/test_auth.py` 中 mock 断言：第二次调用 `get_token()` 时 httpx post 调用次数仍为 1 |
-
-### AC-OBJ — 对象管理
-
-| ID | 标准 | 验证方式 |
-|----|------|---------|
-| AC-OBJ-1 | `scm_list_addresses` 返回的每个元素包含 `id`、`name`、`folder`（或 `snippet` / `device`）三个字段 | 集成测试：对含对象的 folder 调用，检查响应结构 |
-| AC-OBJ-2 | 通过 `scm_create_address` 创建的对象，用 `scm_get_address(id=<返回的 id>)` 能取回，且 `name` 和地址字段值与创建时一致 | 集成测试：create → get 比对 |
-| AC-OBJ-3 | `scm_get_address` 传入不存在的 ID 时，MCP 返回 error，error 文本包含 "not found"（大小写不敏感），不返回空对象 | 单元测试：mock 404 响应，断言 error 文本 |
-
-### AC-SEC — 安全规则
-
-| ID | 标准 | 验证方式 |
-|----|------|---------|
-| AC-SEC-1 | `scm_move_security_rule(destination="top")` 执行后，`scm_list_security_rules` 返回的第一条规则 ID 等于被移动规则的 ID | 集成测试：move → list，比对 `data[0].id` |
-| AC-SEC-2 | `scm_create_security_rule` 创建的规则，`action` 字段值等于请求时传入的字符串（`allow`/`deny`/`drop` 等），不被 server 转换或修改 | 集成测试：create → get，比对 `action` 字段 |
-
-### AC-INC — 告警查询
-
-| ID | 标准 | 验证方式 |
-|----|------|---------|
-| AC-INC-1 | `scm_search_incidents` 返回结构中 `header.dataCount` 为整数，`data` 为数组（可为空数组） | 集成测试或 mock 测试：断言响应类型 |
-| AC-INC-2 | `scm_get_incident` 返回对象包含 `incident_id`、`title`、`severity_id` 三个字段且均非 null | 集成测试：对已知存在的 incident_id 调用，检查字段 |
-
-### AC-ERR — 错误处理
-
-| ID | 标准 | 验证方式 |
-|----|------|---------|
-| AC-ERR-1 | SCM 返回 401 时，MCP error 文本包含 "Authentication"（大小写不敏感） | 单元测试：mock 401 响应，断言 error 文本 |
-| AC-ERR-2 | `SCM_BASE_URL` 指向不可达地址时，任意 tool 调用在 15 秒内返回 MCP error，不挂起 | 本地测试：将 BASE_URL 改为 `https://10.255.255.1`，调用 list，计时 |
-
-### AC-REG — 工具注册
-
-| ID | 标准 | 验证方式 |
-|----|------|---------|
-| AC-REG-1 | `mcp dev scm_mcp_server/server.py` 启动后，MCP Inspector 展示的 tool 数量与 [DESIGN.md](../DESIGN.md) 中 MCP Tool 清单定义的数量完全一致 | 人工：Inspector → Tools 页面，核对数量 |
+| ID | 验收标准 | 验证方式 |
+|---|---|---|
+| AC-1 | `docs/PRD.md` 不列举 REST 端点路径；端点与 tool 映射只引用 `openapi-specs/scm/` 和 `DESIGN.md` | 在 PRD 中搜索 REST path 形态；确认无端点清单 |
+| AC-2 | MCP Inspector 中展示的 MVP tool 集合与 `DESIGN.md` MVP 批次定义一致 | 启动 MCP Inspector，导出 tool 名称集合，与 DESIGN.md 中 MVP tool 清单比对 |
+| AC-3 | 任一 tool 的 input schema 均可追溯到 `openapi-specs/scm/` 下对应 YAML | 抽样检查 tool descriptor 注释或 schema 生成来源；字段不存在于 YAML 时验收失败 |
+| AC-4 | 缺少任一必填环境变量时，server 退出码非 0，stderr 包含缺失变量名 | 移除单个必填环境变量后启动 server，记录退出码和 stderr |
+| AC-5 | 默认日志和 MCP 返回内容中不包含 `SCM_CLIENT_SECRET` 原文或 access token 原文 | 使用测试凭据执行一次成功调用，检查 stdout、stderr、MCP result 和 MCP error |
+| AC-6 | 在 token 有效期内连续执行两次 tool 调用，只发生一次 token 获取行为 | 使用 mock HTTP 客户端统计认证请求次数 |
+| AC-7 | 代表性只读调用收到 SCM 2xx 响应时，MCP result 保留 SCM 返回的顶层字段和值 | mock SCM 返回固定 JSON，断言 MCP result 中对应字段和值一致 |
+| AC-8 | 代表性写调用收到 SCM 2xx 响应时，MCP result 包含 SCM 返回的成功结果；server 不额外声明 dry-run 或本地回滚 | mock 写操作返回固定 JSON，断言 MCP result 与返回体一致 |
+| AC-9 | SCM 返回 401、403、404、409、5xx 时，MCP 返回 error，error 文本包含状态类别或状态码，不包含 Python traceback | 对每类状态码使用 mock 响应调用代表性 tool |
+| AC-10 | SCM 网络不可达或超时时，任一 tool 调用在配置的超时时间内返回 MCP error | 将 SCM base URL 指向不可达地址或 mock timeout，记录返回时间和 error |
+| AC-11 | 使用只读或低权限 token 调用写能力时，server 返回 SCM 权限错误，不重试、不切换凭据、不扩大权限 | mock 或集成环境返回 403，检查请求次数和错误内容 |
+| AC-12 | 写操作 tool 的描述中包含"写操作"和"立即生效"等风险提示 | 导出 tool descriptor，检查写操作描述文本 |
+| AC-13 | `openapi-specs/scm/` 中被引用的 YAML 文件缺失或引用路径不可解析时，schema 校验失败 | 临时移除或重命名引用 YAML，运行 schema 校验或相关测试 |
+| AC-14 | `CLAUDE.md` 第 3 节目录约定包含 `docs/PRD.md`，且说明其职责为产品需求文档 | 检查 `CLAUDE.md` 目录树中的 `docs/PRD.md` 条目 |
 
 ---
 
@@ -177,68 +134,83 @@ AI 助手
 
 ### R1 — 凭据安全
 
-**描述**：`SCM_CLIENT_ID` / `SCM_CLIENT_SECRET` 以明文存在于 `.env` 文件或 shell 环境中；若意外提交或进程被 dump，凭据会暴露。
+**风险**：`SCM_CLIENT_ID`、`SCM_CLIENT_SECRET` 和 access token 若出现在日志、MCP 消息、错误堆栈、shell history 或版本库中，会扩大 SCM 租户暴露面。
 
-**缓解措施**：
-- `.env` 加入 `.gitignore`，CI 配置显式阻止含 `SECRET` 的文件
-- server 日志不得输出任何凭据或 token 内容（日志中出现的 Authorization header 需脱敏）
-- token 生命周期结束后立即从内存清除（不做持久化）
+**缓解方向**：
 
-**待确认**：
-- 生产部署是否需要对接外部 Secret Manager（如 AWS Secrets Manager、Vault）？如是，需在 `auth.py` 增加抽象层。
-- SCM Service Account 是否支持 IP 白名单绑定，以缩小凭据滥用面？
+- 凭据唯一来源为环境变量，不写入代码、测试快照或文档示例中的真实值。
+- 默认日志不输出 Authorization header、client secret 或 access token。
+- access token 仅保存在进程内存，不落盘、不通过 MCP result 返回。
+- `.env` 必须被版本控制忽略；示例文件只能包含占位值。
 
----
+**待确认问题**：
+
+- 生产部署是否要求接入外部 Secret Manager？
+- 是否需要提供日志脱敏测试作为发布门禁？
+- 是否需要规定 token 在进程退出、异常退出时的清理策略？
 
 ### R2 — 写操作防误触
 
-**描述**：AI 助手理解偏差或用户表述模糊时，可能触发 create / update / delete / move 等不可回滚操作。SCM 无原生变更暂存机制，操作立即生效。
+**风险**：自然语言意图可能被 AI 助手误解，导致创建、更新、删除、移动、配置版本写操作或 IAM 写操作在 SCM 中立即生效。
 
-**缓解措施**：
-- 所有写操作的 tool description 标注 `⚠️ 写操作，立即生效，不可通过本工具回滚`
-- DESIGN.md 中写操作 tool 与读操作 tool 分离命名（`scm_create_*` vs `scm_list_*`），便于 AI 助手区分意图
+**缓解方向**：
 
-**待确认**：
-- 是否需要在 server 层实现 `SCM_READONLY=true` 模式（接收写操作 tool 调用但返回 error，不实际发送）？
-- 是否需要在 tool 调用前向 AI 助手返回"即将执行写操作，请确认"的二次确认流程？（需要 MCP SDK 支持）
+- 写操作 tool 描述必须明确标注"写操作"和"立即生效"。
+- 读写能力在命名和描述上保持可区分，降低 AI 助手误选概率。
+- 高风险能力应在 README 和 DESIGN.md 中标注风险级别。
+- 推荐在 MCP 客户端侧让用户确认高风险写操作。
 
----
+**待确认问题**：
+
+- 是否在 server 层增加只读模式，例如 `SCM_READONLY=true`？
+- 是否需要对 delete、move、配置版本写操作、IAM secret 重置引入二次确认机制？
+- 是否需要提供 allow-list / deny-list 限制可调用的写能力集合？
 
 ### R3 — Token 权限边界
 
-**描述**：OAuth2 client_credentials 的 Service Account 若权限过宽（如 super-admin），本工具暴露后等同于向 AI 助手开放全租户写权限。
+**风险**：Service Account 权限过宽时，MCP server 暴露的能力会继承该 token 的全部 SCM 权限；server 不具备独立权限隔离能力。
 
-**缓解措施**：
-- README 明确建议创建**最小权限** Service Account，仅授予所需资源的读写权限
-- DESIGN.md 和 README 文档化每类 tool 所需的 SCM IAM 权限
+**缓解方向**：
 
-**待确认**：
-- SCM IAM 是否支持 **folder 级** 权限粒度（即 Service Account 只能操作特定 folder）？
-- SCM IAM 是否支持**只读角色**的精确绑定，用于需要 audit-only 场景的 IAM 管理员？
+- 文档建议为 MCP server 创建专用 Service Account。
+- 按用户场景拆分只读 token、配置写 token、IAM 管理 token。
+- SCM 返回权限不足时，server 只透传错误，不尝试提权或切换凭据。
+- 验收中覆盖低权限 token 调用写能力的失败路径。
 
----
+**待确认问题**：
+
+- SCM IAM 是否支持 folder、resource type 或 operation 级别的精确授权？
+- 是否需要为不同用户角色运行多个 server 实例并绑定不同凭据？
+- IAM 管理员是否接受 MVP 暴露 IAM 写能力，还是要求先以只读模式上线？
 
 ### R4 — API 版本漂移
 
-**描述**：`openapi-specs/scm/` 下的 YAML 来自 `pan.dev` 仓库，若上游更新（新增/删除字段、端点路径变更）而本地软链未更新，会导致 tool inputSchema 与实际 API 静默不一致，产生难以排查的错误。
+**风险**：`openapi-specs/scm/` 来自上游规范；当上游字段、枚举、请求体或端点行为变化时，本地 tool schema 可能与实际 SCM API 不一致。
 
-**缓解措施**：
-- `openapi-specs` 以软链形式绑定到 `pan.dev` 仓库的**固定 commit hash**，不 track 浮动分支
-- 建议在 CI 中添加校验：当 `openapi-specs/` 下 YAML 文件内容哈希变化时，触发 `tests/test_tools.py` 全量回归
+**缓解方向**：
 
-**待确认**：
-- `pan.dev` 仓库是否有 breaking change 通知机制（release notes / changelog）？
-- 是否需要在本仓库 CI 中定期同步并运行 schema diff 检测？
+- `openapi-specs/` 保持只读，不在本仓库内手改规范。
+- 每个 tool schema 必须记录来源 YAML，便于定位漂移影响面。
+- 当 OpenAPI YAML 变更时，触发 schema 生成、路由完整性和代表性 tool 测试。
+- DESIGN.md 作为 tool 到 REST 映射的唯一技术设计文档，PRD 不复制映射表。
 
----
+**待确认问题**：
 
-### R5 — 并发 token 刷新竞争
+- 上游 `pan.dev` 规范是否有稳定 release、changelog 或 breaking change 通知？
+- 本仓库是否固定到上游 commit，还是跟随分支更新？
+- 是否需要在 CI 中加入 OpenAPI diff 报告并阻止未审查的 schema 变化？
 
-**描述**：多个 MCP tool 并发调用时，若 token 恰好在同一时刻到期，可能触发多次并发的 token 刷新请求，产生不必要的 API 调用，极端情况下若 SCM 有 rate limit 会导致所有刷新失败。
+### R5 — 审计与可追溯性
 
-**缓解措施**：
-- `auth.py` 使用 `asyncio.Lock` 保证同一时刻只有一个协程执行 token 刷新，其余协程等待并复用结果
-- 此为实现阶段的**前置条件**，在 Phase 1 完成前必须验证（见 WORKFLOW.md Phase 1 测试要求）
+**风险**：MVP 不持久化操作记录；当写操作造成生产影响时，可能需要依赖 SCM 自身审计日志和 MCP 客户端上下文追溯。
 
-**待确认**：
-- SCM Auth 端点是否有 rate limit 文档？如有，阈值是多少？
+**缓解方向**：
+
+- MCP server 默认不保存请求体，避免扩大敏感数据面。
+- README 明确说明审计主来源是 SCM 平台审计能力。
+- 对高风险写操作建议用户保留 MCP 客户端对话记录或变更工单编号。
+
+**待确认问题**：
+
+- 是否需要在后续版本增加可选的结构化审计日志？
+- 审计日志如落地，哪些字段必须脱敏或禁止记录？
