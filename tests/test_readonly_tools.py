@@ -6,14 +6,18 @@ from scm_mcp_server import tools
 from scm_mcp_server.tools import readonly
 
 
-def test_objects_and_operations_register_19_readonly_tools() -> None:
+def test_objects_operations_and_security_register_60_readonly_tools() -> None:
     names = {tool.name for tool in readonly.list_tool_descriptors()}
 
-    assert len(names) == 19
+    assert len(names) == 60
     assert "list_addresses" in names
     assert "get_external_dynamic_list" in names
     assert "list_config_versions" in names
     assert "get_running_config_version" in names
+    assert "list_security_rules" in names
+    assert "get_wildfire_anti_virus_profile" in names
+    assert "list_url_filtering_categories" in names
+    assert "get_url_filtering_category" not in names
 
 
 def test_list_tool_passes_only_supported_query_params(monkeypatch) -> None:
@@ -74,4 +78,25 @@ def test_non_2xx_response_is_error_payload(monkeypatch) -> None:
         "status": 404,
         "body": {"message": "not found"},
     }
+
+
+def test_security_rule_position_is_required() -> None:
+    descriptor = {
+        tool.name: tool for tool in readonly.list_tool_descriptors()
+    }["list_security_rules"]
+
+    assert descriptor.inputSchema["required"] == ["position"]
+    assert descriptor.inputSchema["properties"]["position"] == {
+        "type": "string",
+        "enum": ["pre", "post"],
+        "default": "pre",
+    }
+
+
+def test_signature_lists_do_not_accept_name_filter() -> None:
+    descriptor = {
+        tool.name: tool for tool in readonly.list_tool_descriptors()
+    }["list_anti_spyware_signatures"]
+
+    assert "name" not in descriptor.inputSchema["properties"]
 

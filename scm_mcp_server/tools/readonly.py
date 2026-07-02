@@ -43,6 +43,16 @@ _PARAM_SCHEMAS: dict[str, dict[str, Any]] = {
 _REQUIRED_PARAMS = {"id", "version", "position"}
 
 _OBJECT_LIST_PARAMS = ("name", "folder", "snippet", "device", "offset", "limit")
+_LOCATION_PAGING_PARAMS = ("folder", "snippet", "device", "offset", "limit")
+_SECURITY_RULE_LIST_PARAMS = (
+    "name",
+    "position",
+    "folder",
+    "snippet",
+    "device",
+    "offset",
+    "limit",
+)
 _ID_PARAMS = ("id",)
 
 # ref: openapi-specs/scm/config/sase/objects/objects-june.yaml#/paths/~1addresses/get
@@ -103,6 +113,168 @@ _GET_BY_ID_TOOLS.update(
         "get_job": ("/jobs/{id}", _ID_PARAMS),
         "get_config_version": ("/config-versions/{version}", ("version",)),
         "get_running_config_version": ("/config-versions/running", ()),
+    }
+)
+
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1security-rules/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1decryption-rules/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1app-override-rules/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1dos-protection-rules/get
+_LIST_TOOLS.update(
+    {
+        "list_security_rules": ("/security-rules", _SECURITY_RULE_LIST_PARAMS),
+        "list_decryption_rules": ("/decryption-rules", _SECURITY_RULE_LIST_PARAMS),
+        "list_app_override_rules": (
+            "/app-override-rules",
+            _SECURITY_RULE_LIST_PARAMS,
+        ),
+        "list_dos_protection_rules": (
+            "/dos-protection-rules",
+            _OBJECT_LIST_PARAMS,
+        ),
+    }
+)
+
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1security-rules~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1decryption-rules~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1app-override-rules~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1dos-protection-rules~1{id}/get
+_GET_BY_ID_TOOLS.update(
+    {
+        "get_security_rule": ("/security-rules/{id}", _ID_PARAMS),
+        "get_decryption_rule": ("/decryption-rules/{id}", _ID_PARAMS),
+        "get_app_override_rule": ("/app-override-rules/{id}", _ID_PARAMS),
+        "get_dos_protection_rule": ("/dos-protection-rules/{id}", _ID_PARAMS),
+    }
+)
+
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1anti-spyware-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1anti-spyware-signatures/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1data-filtering-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1data-objects/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1decryption-exclusions/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1decryption-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1dns-security-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1dos-protection-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1file-blocking-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1http-header-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1profile-groups/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1url-access-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1url-categories/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1url-filtering-categories/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1vulnerability-protection-profiles/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1vulnerability-protection-signatures/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1wildfire-anti-virus-profiles/get
+_LIST_TOOLS.update(
+    {
+        "list_anti_spyware_profiles": (
+            "/anti-spyware-profiles",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_anti_spyware_signatures": (
+            "/anti-spyware-signatures",
+            _LOCATION_PAGING_PARAMS,
+        ),
+        "list_data_filtering_profiles": (
+            "/data-filtering-profiles",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_data_objects": ("/data-objects", _OBJECT_LIST_PARAMS),
+        "list_decryption_exclusions": (
+            "/decryption-exclusions",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_decryption_profiles": ("/decryption-profiles", _OBJECT_LIST_PARAMS),
+        "list_dns_security_profiles": (
+            "/dns-security-profiles",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_dos_protection_profiles": (
+            "/dos-protection-profiles",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_file_blocking_profiles": (
+            "/file-blocking-profiles",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_http_header_profiles": (
+            "/http-header-profiles",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_profile_groups": ("/profile-groups", _OBJECT_LIST_PARAMS),
+        "list_url_access_profiles": ("/url-access-profiles", _OBJECT_LIST_PARAMS),
+        "list_url_categories": ("/url-categories", _OBJECT_LIST_PARAMS),
+        "list_url_filtering_categories": (
+            "/url-filtering-categories",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_vulnerability_protection_profiles": (
+            "/vulnerability-protection-profiles",
+            _OBJECT_LIST_PARAMS,
+        ),
+        "list_vulnerability_protection_signatures": (
+            "/vulnerability-protection-signatures",
+            _LOCATION_PAGING_PARAMS,
+        ),
+        "list_wildfire_anti_virus_profiles": (
+            "/wildfire-anti-virus-profiles",
+            _OBJECT_LIST_PARAMS,
+        ),
+    }
+)
+
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1anti-spyware-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1anti-spyware-signatures~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1data-filtering-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1data-objects~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1decryption-exclusions~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1decryption-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1dns-security-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1dos-protection-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1file-blocking-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1http-header-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1profile-groups~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1url-access-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1url-categories~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1vulnerability-protection-profiles~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1vulnerability-protection-signatures~1{id}/get
+# ref: openapi-specs/scm/config/sase/security/security-services-R2-2026.yaml#/paths/~1wildfire-anti-virus-profiles~1{id}/get
+_GET_BY_ID_TOOLS.update(
+    {
+        "get_anti_spyware_profile": ("/anti-spyware-profiles/{id}", _ID_PARAMS),
+        "get_anti_spyware_signature": (
+            "/anti-spyware-signatures/{id}",
+            _ID_PARAMS,
+        ),
+        "get_data_filtering_profile": (
+            "/data-filtering-profiles/{id}",
+            _ID_PARAMS,
+        ),
+        "get_data_object": ("/data-objects/{id}", _ID_PARAMS),
+        "get_decryption_exclusion": ("/decryption-exclusions/{id}", _ID_PARAMS),
+        "get_decryption_profile": ("/decryption-profiles/{id}", _ID_PARAMS),
+        "get_dns_security_profile": ("/dns-security-profiles/{id}", _ID_PARAMS),
+        "get_dos_protection_profile": (
+            "/dos-protection-profiles/{id}",
+            _ID_PARAMS,
+        ),
+        "get_file_blocking_profile": ("/file-blocking-profiles/{id}", _ID_PARAMS),
+        "get_http_header_profile": ("/http-header-profiles/{id}", _ID_PARAMS),
+        "get_profile_group": ("/profile-groups/{id}", _ID_PARAMS),
+        "get_url_access_profile": ("/url-access-profiles/{id}", _ID_PARAMS),
+        "get_url_category": ("/url-categories/{id}", _ID_PARAMS),
+        "get_vulnerability_protection_profile": (
+            "/vulnerability-protection-profiles/{id}",
+            _ID_PARAMS,
+        ),
+        "get_vulnerability_protection_signature": (
+            "/vulnerability-protection-signatures/{id}",
+            _ID_PARAMS,
+        ),
+        "get_wildfire_anti_virus_profile": (
+            "/wildfire-anti-virus-profiles/{id}",
+            _ID_PARAMS,
+        ),
     }
 )
 
